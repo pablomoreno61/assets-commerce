@@ -8,14 +8,15 @@
    the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR REPRESENTATIONS
    OF ANY KIND, either express or implied. See the License for the specific language
    governing permissions and limitations under the License.
---%><%
-%><%@ include file="/libs/granite/ui/global.jsp" %><%
-%><%@ page session="false"
-          import="org.apache.commons.lang3.StringUtils,
-                  com.adobe.granite.ui.components.AttrBuilder,
-                  com.adobe.granite.ui.components.Config,
-                  com.adobe.granite.ui.components.Field,
-                  com.adobe.granite.ui.components.Tag" %><%--###
+--%>
+<%@ include file="/libs/granite/ui/global.jsp" %>
+<%@ page session="false"
+         import="org.apache.commons.lang3.StringUtils,
+                 com.adobe.granite.ui.components.AttrBuilder,
+                 com.adobe.granite.ui.components.Config,
+                 com.adobe.granite.ui.components.Field,
+                 com.adobe.granite.ui.components.Tag" %>
+<%--###
 TextField
 =========
 
@@ -81,8 +82,9 @@ TextField
        * The maximum number of characters (in Unicode code points) that the user can enter.
        */
       - maxlength (Long)
-###--%><ui:includeClientLib categories="commerce.productmetadata" /><%
-
+###--%>
+<ui:includeClientLib categories="commerce.productmetadata"/>
+<%
     Config cfg = cmp.getConfig();
     ValueMap vm = (ValueMap) request.getAttribute(Field.class.getName());
     Field field = new Field(cfg);
@@ -120,64 +122,81 @@ TextField
 
     String validation = StringUtils.join(cfg.get("validation", new String[0]), " ");
     attrs.add("data-foundation-validation", validation);
-    String contentPath =  (String)request.getAttribute("granite.ui.form.contentpath");
+    String contentPath = (String) request.getAttribute("granite.ui.form.contentpath");
 
     // @coral
     attrs.add("is", "coral-textfield");
+
     String sku = vm.get("value", String.class);
-    String roleFieldName = "./jcr:content/metadata/commerce:roles";
-    String orderFieldName = "./jcr:content/metadata/commerce:positions";
+    String roleFieldName = cfg.get("roleField", "./jcr:content/metadata/commerce:roles");
+    String orderFieldName = cfg.get("orderField", "./jcr:content/metadata/commerce:positions");
     String roleValue = "";
     String orderValue = "";
     boolean showRole = "true".equals(cfg.get("showRoles", ""));
     boolean showOrder = "true".equals(cfg.get("showOrder", ""));
-    final String defaultRoles[] = new String[]{"thumbnail", "image", "swatch_image", "small_image"};
-    String roleOptions[] = cfg.get("roleOptions", defaultRoles);
-    roleFieldName = cfg.get("roleField",roleFieldName);
-    orderFieldName = cfg.get("orderField",orderFieldName);
-    Integer indexStr =  (Integer)request.getAttribute("commerce.sku.index");
+    final String[] defaultRoles = new String[]{"thumbnail", "image", "swatch_image", "small_image"};
+    String[] roleOptions = cfg.get("roleOptions", defaultRoles);
+
+    Integer indexStr = (Integer) request.getAttribute("commerce.sku.index");
     int index = 0;
-    if (indexStr != null){
-       index = indexStr.intValue();
-    }
-    else {
-    %><input type="hidden" name='<%= cfg.get("name", String.class) %>@TypeHint' value="String[]"/> <%
-     if (showRole) { %>
-       <input type="hidden" name='<%=roleFieldName %>@TypeHint' value="String[]"/>
-     <% }
-     if (showOrder) { %>
-       <input type="hidden" name='<%=orderFieldName %>@TypeHint' value="Long[]"/>
-     <% }
-    }
-    if (sku != null) {
-        if (contentPath != null) {
-             ValueMap assetVM = resourceResolver.getResource(contentPath).getValueMap();
-             roleValue = assetVM.get(roleFieldName, new String[]{}).length > index  ? assetVM.get(roleFieldName, new String[]{})[index] : "";
-             orderValue = assetVM.get(orderFieldName, new String[]{}).length > index  ? assetVM.get(orderFieldName, new String[]{})[index] : "";
-             if ("-1".equals(orderValue)) {
-                 //orderValue = "";
-             }
-             request.setAttribute("commerce.sku.index", index + 1);
-        }
+    if (indexStr != null) {
+        index = indexStr;
+    } else {
+        %>
+<input type="hidden" name="<%= cfg.get("name", String.class) %>@TypeHint" value="String[]"/>
+        <% if (showRole) { %>
+<input type="hidden" name="<%=roleFieldName %>@TypeHint" value="String[]"/>
+        <% }
+
+        if (showOrder) { %>
+<input type="hidden" name="<%=orderFieldName %>@TypeHint" value="Long[]"/>
+        <% }
     }
 
-%><input <%= attrs.build() %> value='<%=sku %>' class='commerce-product-skuid'  name='<%= cfg.get("name", String.class) %>' placeholder='<%= i18n.get("Product SKU") %>'/>
+    if (sku != null) {
+        if (contentPath != null) {
+            ValueMap assetVM = resourceResolver.getResource(contentPath).getValueMap();
+            roleValue = assetVM.get(roleFieldName, new String[]{}).length > index ? assetVM.get(roleFieldName, new String[]{})[index] : "";
+            orderValue = assetVM.get(orderFieldName, new String[]{}).length > index ? assetVM.get(orderFieldName, new String[]{})[index] : "";
+            if ("-1".equals(orderValue)) {
+                //orderValue = "";
+            }
+            request.setAttribute("commerce.sku.index", index + 1);
+        }
+    }
+%>
+
+<input <%= attrs.build() %> value="<%=sku %>" class="commerce-product-skuid" name="<%= cfg.get("name", String.class) %>"
+                            placeholder="<%= i18n.get("Product SKU") %>"/>
 <% if (showOrder) { %>
-       <coral-numberinput placeholder="position" class='commerce-product-order' name='<%=orderFieldName %>' value='<%=orderValue %>' ></coral-numberinput>
+<coral-numberinput placeholder="position" class="commerce-product-order" name="<%=orderFieldName %>"
+                   value="<%=orderValue %>"></coral-numberinput>
 <% }
-if (showRole) {
-    //dont use name with role field as it doesn't do serialization with ; as separator
+
+    if (showRole) {
+        // Don't use name with role field as it doesn't do serialization with ";" as separator
+%>
+<coral-select class="commerce-product-role" placeholder="Choose an image role" multiple>
+    <input name="<%=roleFieldName %>" type="hidden" value="<%=roleValue %>"/>
+    <%
+        String[] selectedRoles = roleValue.isEmpty() ? new String[0] : roleValue.split(";");
+        for (String role : roleOptions) {
+            boolean isSelected = false;
+            for (String selectedRole : selectedRoles) {
+                if (selectedRole.trim().equals(role)) {
+                    isSelected = true;
+                    break;
+                }
+            }
+
+            if (isSelected) { %>
+    <coral-select-item value="<%=role %>" selected><%=role %>
+    </coral-select-item>
+    <% } else { %>
+    <coral-select-item value="<%=role %>"><%=role %>
+    </coral-select-item>
+    <% }
+    }
     %>
-    <coral-select class='commerce-product-role' placeholder="Choose usage for image" multiple>
-     <input name='<%=roleFieldName %>' type="hidden" value='<%=roleValue %>'/>
-       <% for (String role : roleOptions) {
-            if (roleValue.indexOf(role) >= 0) { %>
-                <coral-select-item value='<%=role %>' selected><%=role %></coral-select-item>
-           <% }
-            else { %>
-                <coral-select-item value='<%=role %>'><%=role %></coral-select-item>
-           <% }
-            
-        }%>
-    </coral-select>
+</coral-select>
 <% } %>
