@@ -12,10 +12,10 @@
 <%@ include file="/libs/granite/ui/global.jsp" %>
 <%@ page session="false"
          import="org.apache.commons.lang3.StringUtils,
-                 com.adobe.granite.ui.components.AttrBuilder,
-                 com.adobe.granite.ui.components.Config,
-                 com.adobe.granite.ui.components.Field,
-                 com.adobe.granite.ui.components.Tag" %>
+                  com.adobe.granite.ui.components.AttrBuilder,
+                  com.adobe.granite.ui.components.Config,
+                  com.adobe.granite.ui.components.Field,
+                  com.adobe.granite.ui.components.Tag" %>
 <%--###
 TextField
 =========
@@ -83,7 +83,7 @@ TextField
        */
       - maxlength (Long)
 ###--%>
-<ui:includeClientLib categories="commerce.productmetadata"/>
+<ui:includeClientLib categories="commerce.productmetadata" />
 <%
     Config cfg = cmp.getConfig();
     ValueMap vm = (ValueMap) request.getAttribute(Field.class.getName());
@@ -122,14 +122,14 @@ TextField
 
     String validation = StringUtils.join(cfg.get("validation", new String[0]), " ");
     attrs.add("data-foundation-validation", validation);
-    String contentPath = (String) request.getAttribute("granite.ui.form.contentpath");
+    String contentPath =  (String) request.getAttribute("granite.ui.form.contentpath");
 
     // @coral
     attrs.add("is", "coral-textfield");
 
     String sku = vm.get("value", String.class);
     String roleFieldName = cfg.get("roleField", "./jcr:content/metadata/commerce:roles");
-    String orderFieldName = cfg.get("orderField", "./jcr:content/metadata/commerce:positions");
+    String orderFieldName = cfg.get("orderField","./jcr:content/metadata/commerce:positions");
     String roleValue = "";
     String orderValue = "";
     boolean showRole = "true".equals(cfg.get("showRoles", ""));
@@ -137,27 +137,27 @@ TextField
     final String[] defaultRoles = new String[]{"thumbnail", "image", "swatch_image", "small_image"};
     String[] roleOptions = cfg.get("roleOptions", defaultRoles);
 
-    Integer indexStr = (Integer) request.getAttribute("commerce.sku.index");
+    Integer indexStr =  (Integer) request.getAttribute("commerce.sku.index");
     int index = 0;
     if (indexStr != null) {
         index = indexStr;
     } else {
-        %>
+%>
 <input type="hidden" name="<%= cfg.get("name", String.class) %>@TypeHint" value="String[]"/>
-        <% if (showRole) { %>
+<% if (showRole) { %>
 <input type="hidden" name="<%=roleFieldName %>@TypeHint" value="String[]"/>
-        <% }
+<% }
 
-        if (showOrder) { %>
+    if (showOrder) { %>
 <input type="hidden" name="<%=orderFieldName %>@TypeHint" value="Long[]"/>
-        <% }
-    }
+<% }
+}
 
     if (sku != null) {
         if (contentPath != null) {
             ValueMap assetVM = resourceResolver.getResource(contentPath).getValueMap();
-            roleValue = assetVM.get(roleFieldName, new String[]{}).length > index ? assetVM.get(roleFieldName, new String[]{})[index] : "";
-            orderValue = assetVM.get(orderFieldName, new String[]{}).length > index ? assetVM.get(orderFieldName, new String[]{})[index] : "";
+            roleValue = assetVM.get(roleFieldName, new String[]{}).length > index  ? assetVM.get(roleFieldName, new String[]{})[index] : "";
+            orderValue = assetVM.get(orderFieldName, new String[]{}).length > index  ? assetVM.get(orderFieldName, new String[]{})[index] : "";
             if ("-1".equals(orderValue)) {
                 //orderValue = "";
             }
@@ -166,11 +166,9 @@ TextField
     }
 %>
 
-<input <%= attrs.build() %> value="<%=sku %>" class="commerce-product-skuid" name="<%= cfg.get("name", String.class) %>"
-                            placeholder="<%= i18n.get("Product SKU") %>"/>
+<input <%= attrs.build() %> value="<%=sku %>" class="commerce-product-skuid"  name="<%= cfg.get("name", String.class) %>" placeholder="<%= i18n.get("Product SKU") %>" />
 <% if (showOrder) { %>
-<coral-numberinput placeholder="position" class="commerce-product-order" name="<%=orderFieldName %>"
-                   value="<%=orderValue %>"></coral-numberinput>
+<coral-numberinput placeholder="position" class="commerce-product-order" name="<%=orderFieldName %>" value="<%=orderValue %>" ></coral-numberinput>
 <% }
 
     if (showRole) {
@@ -190,11 +188,9 @@ TextField
             }
 
             if (isSelected) { %>
-    <coral-select-item value="<%=role %>" selected><%=role %>
-    </coral-select-item>
+    <coral-select-item value="<%=role %>" selected><%=role %></coral-select-item>
     <% } else { %>
-    <coral-select-item value="<%=role %>"><%=role %>
-    </coral-select-item>
+    <coral-select-item value="<%=role %>"><%=role %></coral-select-item>
     <% }
     }
     %>
